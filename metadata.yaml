@@ -1,0 +1,3 @@
+cloud-whitelist:
+  - maas
+friendly-name: "OpenStack Autopilot"

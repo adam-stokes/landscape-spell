@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Path to executing script
+SCRIPT=$(realpath $0)
+
+# Directory housing script
+SCRIPTPATH=$(dirname $SCRIPT)
+
+. $SCRIPTPATH/share/common.sh
+
+landscape_exec=$SCRIPTPATH/configure-landscape
+
+# landscape should be available so we register our client
+$landscape_exec --admin-email "root@example.com" --admin-password "ubuntu123" --admin-name "administrator" --system-email "root@example.com" --maas-host "$MAAS_SERVER" --maas-apikey "$MAAS_OAUTH"
+RET=$?
+
+if [ $RET -gt 0 ]; then
+    exposeResult "Unable to register against Landscape server, please check your deployment." 1 "false"
+fi
+
+result_message="Access Autopilot: http://$hostname/account/standalone/openstack l: root@example.com p: ubuntu123"
+
+exposeResult "$result_message" 0 "true"
