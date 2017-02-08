@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to executing script
-SCRIPT=$(realpath $0)
+SCRIPT=$(readlink -e $0)
 
 # Directory housing script
 SCRIPTPATH=$(dirname $SCRIPT)
@@ -11,7 +11,12 @@ SCRIPTPATH=$(dirname $SCRIPT)
 landscape_exec=$SCRIPTPATH/configure-landscape
 
 # landscape should be available so we register our client
-$landscape_exec --admin-email "root@example.com" --admin-password "ubuntu123" --admin-name "administrator" --system-email "root@example.com" --maas-host "$MAAS_SERVER" --maas-apikey "$MAAS_OAUTH"
+$landscape_exec --admin-email "root@example.com" \
+                --admin-password "ubuntu123" \
+                --admin-name "administrator" \
+                --system-email "root@example.com" \
+                --maas-host "$MAAS_SERVER" \
+                --maas-apikey "$MAAS_OAUTH"
 RET=$?
 
 if [ $RET -gt 0 ]; then
