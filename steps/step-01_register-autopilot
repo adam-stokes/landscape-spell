@@ -12,11 +12,15 @@ haproxy=$(unitAddress haproxy 0)
 
 tmpfile=$(mktemp)
 cat <<EOF> $tmpfile
+HAPROXY=$haproxy
+EOF
+
+cat <<EOF>> "$tmpfile"
 sudo apt-get -qq update && sudo apt-get -qqyf install landscape-api
-CREDS=$(LANDSCAPE_API_KEY="anonymous" LANDSCAPE_API_SECRET="anonymous" landscape-api call BootstrapLDS --json admin_email="$LDS_EMAIL" admin_name="$LDS_NAME" admin_password="$LDS_PASSWORD" --uri https://$haproxy/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt)
+CREDS=$(LANDSCAPE_API_KEY="anonymous" LANDSCAPE_API_SECRET="anonymous" landscape-api call BootstrapLDS --json admin_email="$LDS_EMAIL" admin_name="$LDS_NAME" admin_password="$LDS_PASSWORD" --uri https://$HAPROXY/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt)
 LANDSCAPE_API_KEY=$(echo $CREDS|python -c "import sys,yaml; print(yaml.load(sys.stdin))['LANDSCAPE_API_KEY']")
 LANDSCAPE_API_SECRET=$(echo $CREDS|python -c "import sys,yaml; print(yaml.load(sys.stdin))['LANDSCAPE_API_SECRET']")
-LANDSCAPE_API_KEY="$LANDSCAPE_API_KEY" LANDSCAPE_API_SECRET="$LANDSCAPE_API_SECRET" landscape-api call RegisterMAASRegionController --json endpoint="$MAAS_ENDPOINT" credentials="$MAAS_APIKEY" --uri https://$haproxy/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt" > /dev/null 2>&1
+LANDSCAPE_API_KEY="$LANDSCAPE_API_KEY" LANDSCAPE_API_SECRET="$LANDSCAPE_API_SECRET" landscape-api call RegisterMAASRegionController --json endpoint="$MAAS_ENDPOINT" credentials="$MAAS_APIKEY" --uri https://$HAPROXY/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt" > /dev/null 2>&1
 EOF
 
 juju scp -m $JUJU_CONTROLLER:$JUJU_MODEL $tmpfile landscape-server/0:setup-landscape.sh
