@@ -1,0 +1,9 @@
+#!/bin/sh
+echo "export HAPROXY=`juju run --unit haproxy/0 \"unit-get private-address\"`"
+echo "export LDS_EMAIL=$LDS_EMAIL"
+echo "export LDS_NAME=$LDS_NAME"
+echo "export LDS_PASSWORD=$LDS_PASSWORD"
+echo "export LANDSCAPE_API_KEY=\"anonymous\""
+echo "export LANDSCAPE_API_SECRET=\"anonymous\""
+
+

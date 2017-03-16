@@ -6,28 +6,13 @@ SCRIPT=$(readlink -e $0)
 # Directory housing script
 SCRIPTPATH=$(dirname $SCRIPT)
 
-. $SCRIPTPATH/share/common.sh
-
-haproxy=$(unitAddress haproxy 0)
+. $CONJURE_UP_SPELLSDIR/sdk/common.sh
 
 tmpfile=$(mktemp)
-cat <<EOF> $tmpfile
-HAPROXY=$haproxy
-LDS_EMAIL=$LDS_EMAIL
-LDS_NAME=$LDS_NAME
-LDS_PASSWORD=$LDS_PASSWORD
-EOF
-
-cat <<EOF>> "$tmpfile"
-sudo apt-get -qq update && sudo apt-get -qqyf install landscape-api
-CREDS=$(LANDSCAPE_API_KEY="anonymous" LANDSCAPE_API_SECRET="anonymous" landscape-api call BootstrapLDS --json admin_email="$LDS_EMAIL" admin_name="$LDS_NAME" admin_password="$LDS_PASSWORD" --uri https://$HAPROXY/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt)
-LANDSCAPE_API_KEY=$(echo $CREDS|python -c "import sys,yaml; print(yaml.load(sys.stdin))['LANDSCAPE_API_KEY']")
-LANDSCAPE_API_SECRET=$(echo $CREDS|python -c "import sys,yaml; print(yaml.load(sys.stdin))['LANDSCAPE_API_SECRET']")
-LANDSCAPE_API_KEY="$LANDSCAPE_API_KEY" LANDSCAPE_API_SECRET="$LANDSCAPE_API_SECRET" landscape-api call RegisterMAASRegionController --json endpoint="$MAAS_ENDPOINT" credentials="$MAAS_APIKEY" --uri https://$HAPROXY/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt" > /dev/null 2>&1
-EOF
+$SCRIPTPATH/vars > $tmpfile
+cat $SCRIPTPATH/setup-landscape.sh >> $tmpfile
 
 juju scp -m $JUJU_CONTROLLER:$JUJU_MODEL $tmpfile landscape-server/0:setup-landscape.sh
-
 juju ssh -m $JUJU_CONTROLLER:$JUJU_MODEL landscape-server/0 "bash setup-landscape.sh"
 RET=$?
 
@@ -46,3 +31,10 @@ exposeResult "$result_message" 0 "true"
 
 # LANDSCAPE_API_KEY="anonymous" LANDSCAPE_API_SECRET="anonymous" landscape-api call BootstrapLDS --json admin_email=moo@example.com admin_name="moo" admin_password="password" --uri https://10.0.8.157/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt
 # {"LANDSCAPE_API_SECRET": "zHwguyk/JE0dIaRNIiqitUNVGm8TuejNsXkYwz08", "LANDSCAPE_API_KEY": "OT70FVBP4HYAKI3ABFCZ"}
+#    12 haproxy=$(unitAddress haproxy 0)
+# +  13 MYCOMMAND=$(base64 -w0 $SCRIPTPATH/commonrc)
+# +  14 #juju scp -m $JUJU_CONTROLLER:$JUJU_MODEL $MYCOMMAND landscape-server/0:setup-landscape.sh
+# +  15 juju ssh -m $JUJU_CONTROLLER:$JUJU_MODEL landscape-server/0 "echo $MYCOMMAND | base64 -d | bash"
+# +  16 juju ssh -m $JUJU_CONTROLLER:$JUJU_MODEL landscape-server/0 "echo $MYCOMMAND | base64 -d >setup-landscape.sh"
+
+
