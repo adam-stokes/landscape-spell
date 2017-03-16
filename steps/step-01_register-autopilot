@@ -10,23 +10,22 @@ SCRIPTPATH=$(dirname $SCRIPT)
 
 haproxy=$(unitAddress haproxy 0)
 
-juju ssh -m $JUJU_CONTROLLER:$JUJU_MODEL landscape-server/0 "sudo apt-get -qq update && sudo apt-get -qyf install landscape-api"
-CREDS=juju ssh -m $JUJU_CONTROLLER:$JUJU_MODEL landscape-server/0 "LANDSCAPE_API_KEY=\"anonymous\" LANDSCAPE_API_SECRET=\"anonymous\" landscape-api call BootstrapLDS --json admin_email=\"$LDS_EMAIL\" admin_name=\"$LDS_NAME\" admin_password=\"$LDS_PASSWORD\" --uri https://$haproxy/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt"
+tmpfile=$(mktemp)
+cat <<EOF> $tmpfile
+sudo apt-get -qq update && sudo apt-get -qqyf install landscape-api
+CREDS=$(LANDSCAPE_API_KEY="anonymous" LANDSCAPE_API_SECRET="anonymous" landscape-api call BootstrapLDS --json admin_email="$LDS_EMAIL" admin_name="$LDS_NAME" admin_password="$LDS_PASSWORD" --uri https://$haproxy/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt)
+LANDSCAPE_API_KEY=$(echo $CREDS|python -c "import sys,yaml; print(yaml.load(sys.stdin))['LANDSCAPE_API_KEY']")
+LANDSCAPE_API_SECRET=$(echo $CREDS|python -c "import sys,yaml; print(yaml.load(sys.stdin))['LANDSCAPE_API_SECRET']")
+LANDSCAPE_API_KEY="$LANDSCAPE_API_KEY" LANDSCAPE_API_SECRET="$LANDSCAPE_API_SECRET" landscape-api call RegisterMAASRegionController --json endpoint="$MAAS_ENDPOINT" credentials="$MAAS_APIKEY" --uri https://$haproxy/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt" > /dev/null 2>&1
+EOF
+
+juju scp -m $JUJU_CONTROLLER:$JUJU_MODEL $tmpfile landscape-server/0:setup-landscape.sh
+
+juju ssh -m $JUJU_CONTROLLER:$JUJU_MODEL landscape-server/0 "bash setup-landscape.sh"
 RET=$?
 
 if [ $RET -gt 0 ]; then
     exposeResult "Unable to register against Landscape server, please check your deployment." 1 "false"
-fi
-
-LANDSCAPE_API_KEY=$(echo $CREDS|python -c "import sys,yaml; print(yaml.load(sys.stdin))['LANDSCAPE_API_KEY]")
-LANDSCAPE_API_SECRET=$(echo $CREDS|python -c "import sys,yaml; print(yaml.load(sys.stdin))['LANDSCAPE_API_SECRET]")
-
-juju ssh -m $JUJU_CONTROLLER:$JUJU_MODEL landscape-server/0 "LANDSCAPE_API_KEY=\"$LANDSCAPE_API_KEY\" LANDSCAPE_API_SECRET=\"$LANDSCAPE_API_SECRET\" landscape-api call RegisterMAASRegionController --json endpoint=\"$MAAS_ENDPOINT\" credentials=\"$MAAS_APIKEY\" --uri https://$haproxy/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt"
-
-RET=$?
-
-if [ $RET -gt 0 ]; then
-    exposeResult "Unable to register MAAS endpoint against Landscape server, please check your deployment." 1 "false"
 fi
 
 result_message="Landscape is now available, to access visit: https://$haproxy/account/standalone/openstack \n\nlogin: $LDS_EMAIL \npassword: $LDS_PASSWORD"
