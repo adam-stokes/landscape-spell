@@ -13,6 +13,9 @@ haproxy=$(unitAddress haproxy 0)
 tmpfile=$(mktemp)
 cat <<EOF> $tmpfile
 HAPROXY=$haproxy
+LDS_EMAIL=$LDS_EMAIL
+LDS_NAME=$LDS_NAME
+LDS_PASSWORD=$LDS_PASSWORD
 EOF
 
 cat <<EOF>> "$tmpfile"
