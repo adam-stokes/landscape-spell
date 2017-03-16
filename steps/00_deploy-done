@@ -7,7 +7,7 @@ SCRIPT=$(readlink -e $0)
 # Directory housing script
 SCRIPTPATH=$(dirname $SCRIPT)
 
-. $CONJURE_UP_SPELLSDIR/sdk/common.sh
+. $SCRIPTPATH/helpers
 
 if ! juju wait -wm $JUJU_CONTROLLER:$JUJU_MODEL; then
     exposeResult "Applications did not start successfully" 1 "false"
