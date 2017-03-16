@@ -1,3 +1,12 @@
+# export LANDSCAPE_API_KEY=$(echo "$output" | python -c "import json; print json.loads(open('/dev/stdin', 
+#                'r').read())['LANDSCAPE_API_KEY']")
+
+# landscape-api call BootstrapLDS --json admin_email=stan@example.com admin_name="$ldsver" admin_password=pwd
+
+# LANDSCAPE_API_KEY="anonymous" LANDSCAPE_API_SECRET="anonymous" landscape-api call BootstrapLDS --json admin_email=moo@example.com admin_name="moo" admin_password="password" --uri https://10.0.8.157/api/ --ssl-ca-file /etc/ssl/certs/landscape_server_ca.crt
+# {"LANDSCAPE_API_SECRET": "zHwguyk/JE0dIaRNIiqitUNVGm8TuejNsXkYwz08", "LANDSCAPE_API_KEY": "OT70FVBP4HYAKI3ABFCZ"}
+
+
 # loggers
 #
 # Arguments:
